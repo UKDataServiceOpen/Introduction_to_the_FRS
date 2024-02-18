@@ -1,0 +1,372 @@
+---
+title: "Getting familiar with the Family Resources Survey using R"
+author: "UK Data Service"
+date: last-modified
+date-format: "MMMM YYYY"
+mainfont: "Arial"
+title-block: "plain"
+title-block-banner: "white"
+title-block-banner-color: "#742082"
+format:
+  html:
+   toc: true
+   smooth-scroll: true
+   toc-location: left
+css: frs.css
+execute:
+  warning: false
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
+This exercise is part of the 'Getting started with <!-- add module name -->' online module.
+
+In the exercise, we examine data from the Family Resources Survey 2021/2022 financial year and explore:
+
+-   Two of the four well-being variables available in the data: `HAPPYWB` and `ANXIOUS`.
+    The other two variables available are LIFESAT and MEANING.
+
+-   How do these two variables vary across age groups, and
+
+-   How do these two variables vary across family type.
+
+## Getting started
+
+Data can be accessed from the [UK Data Service website](http://doi.org/10.5255/UKDA-SN-9073-1) following registration.
+
+To follow along with the exercise you will need to download the SPSS data format from the UK Data Service website.
+After saving the file on your machine, unzip everything and make sure the folder "UKDA-9073-spss" is placed in the folder which contains the R project FRS.Rproj and R script files FRS_get_familiar.qmd that you have obtained from the Github repository <!-- Add link to repository? -->
+
+The FRS is a big survey, as a result, the data is organised in multiple files.
+However, in this exercise, we will be using only two or three of these data files.
+
+Using an R project (.Rproj) offers a structured, isolated, and reproducible working environment.
+
+### Setting up R
+
+To begin with, we need to load all R packages we will be using for this exercise.
+When using R and writing R scripts, it is good practice to have all the packages needed for analysis at the beginning of an R script.
+
+```{r}
+library(dplyr) # Data manipulation functions
+library(haven) # Importing Stata/SPSS files
+library(Hmisc) # Extra statistical functions
+library(tidyverse) #Data manipulation and visualization.
+library(janitor) #Data cleaning and summary table
+library(knitr) #Tables in Quarto
+library(DescTools) #Weighting
+#Load the data files we are using in this exercise
+frs_adult2122 <- read_spss ("UKDA-9073-spss/spss/spss25/adult.sav")
+frs_benunit2122 <- read_spss ("UKDA-9073-spss/spss/spss25/benunit.sav")
+
+```
+
+## Explore the data sets
+
+To begin with, we will be focusing on exploring the "adult.sav" and "benunit.sav" datasets.
+The "adult.sav" file contains 590 variables while the "benunit.sav" file has 275 variables.
+We will only be using a few of these variables.
+As a result, it is better for us to create two subsets of the data, containing only the variables we are interested in.
+
+**NOTE:** These two files have different units of analysis.
+The "adult.sav" file contains data at the individual level while the "benunit.sav" file has data at the benefit unit level (see the [FRS documentation](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=9073#!/documentation) for the definition of a benefit unit)
+
+```{r}
+#use a pipeline (the %>% operator) 
+#and the "select" function from the dplyr package
+#the code below only selects the variables we are interested in
+frs_adult2122_short <- frs_adult2122 %>% select (SERNUM, BENUNIT, PERSON, GROSS4, HAPPYWB, ANXIOUS, SEX, IAGEGR4)
+
+frs_benunit2122_short <- frs_benunit2122 %>% select (SERNUM, BENUNIT, FAMTYPBU)
+```
+
+Start by getting an overall feel of the two data sets.
+
+We will start with the "adult" dataset.
+Either inspect variables and cases in the data editor or use the code below to produce a summary of all the variables in the dataset.
+
+```{r}
+
+dim(frs_adult2122_short) #Gives the number of rows (observations) and columns (variables)
+
+names(frs_adult2122_short) #List variable names in their actual order in the dataset
+
+head(data.frame(frs_adult2122_short)) #Displays the first few rows of a data frame
+#you can use tail(data.frame(frs_adult2122_short)) to display the last few rows of a data frame
+
+```
+
+Now let's also have a quick look at the "benunit" dataset.
+
+```{r}
+
+dim(frs_benunit2122_short) #Gives the number of rows (observations) and columns (variables)
+
+names(frs_benunit2122_short) #List variable names in their actual order in the dataset
+
+head(data.frame(frs_benunit2122_short)) #Displays the first few lines of a data frame
+
+```
+
+**Questions**
+
+1.  What is the overall sample size of each of the data sets?
+
+2.  How many variables are there in the short adult dataset?
+
+Now, let's learn more about the available variables.
+
+**Note**: In traditional statistical software packages like SPSS or Stata, categorical variables are often represented as numeric codes with attached labels that convey their substantive meaning.
+R on the other hand allows for the use of alphanumeric variables or a specialised type of categorical variable known as 'factors'.
+Factors in R can be ordered or unordered and are a fundamental aspect of R's categorical data handling.
+
+The *Haven* R package, which we use in this course, facilitates the conversion of categorical data from SPSS or Stata to R.
+While it can preserve the original numeric values it also contains attributes, which are special types of R objects with a name, accessible via the *attr()* function.
+In this context, each variable has two key attributes: a 'label', which is a description of the variable, and 'labels', which are the value labels.
+
+Furthermore, the *Haven* R package allows for the conversion of these imported numeric variables into R factors.
+In this conversion, the factors are created with levels (i.e., categories) reflecting the value labels from SPSS or Stata.
+This approach offers a streamlined method to handle and analyse categorical data in R, bridging the gap between different statistical software methodologies.
+
+Let's examine the original variables' description and value labels.
+
+```{r}
+
+#the cat and names functions are only used in this case to make the output look better, but you do not need to use them
+cat(attr(frs_adult2122_short$HAPPYWB,"label"))
+
+names(attr(frs_adult2122_short$HAPPYWB,"labels"))
+
+cat(attr(frs_adult2122_short$ANXIOUS,"label"))
+
+names(attr(frs_adult2122_short$ANXIOUS,"labels"))
+
+cat(attr(frs_adult2122_short$IAGEGR4,"label"))
+
+names(attr(frs_adult2122_short$IAGEGR4,"labels"))
+
+cat(attr(frs_benunit2122_short$FAMTYPBU,"label"))
+
+names(attr(frs_benunit2122_short$FAMTYPBU,"labels"))
+
+
+```
+
+**Questions**
+
+3\.
+What do the variables measure and how?
+
+## Merging data sets
+
+Why do we merge data?
+Merging datasets allows us to combine information from different sources to enhance the depth of our analysis.
+This is particularly relevant when dealing with survey data that captures different dimensions of information at multiple levels, such as individual and benefit unit levels.
+
+By merging data that captures information at different levels we can examine how individual characteristics interact with benefit-unit-level variables to influence outcomes of interest.
+In this we might want to examine the relationship between individual happiness and family type.
+This requires assigning the benefit unit level variable to every individuals within that unit, before we can analyse it further.
+
+How do we merge data?
+In order to effectively merge datasets you need to use common identifiers - unique keys present across all datasets involved in the merge.
+In this case, the FRS documentation provides us with the necessary information: what are the available identifiers and how to use them depending which datasets we want to merge.
+
+In our case the SERNUM and BENUNIT variables are needed to merge the two datasets.
+Sernum represents the unique serial number of the household, and Benunit represents the identifier for the benefit unit (family) in the household.
+
+```{r}
+#specify which datasets to merge and which columns to use for merging
+merged_data <- merge(frs_adult2122_short, frs_benunit2122_short, by = c("SERNUM", "BENUNIT"))
+```
+
+**Questions**
+
+4\.
+How many variables do we have in the new merge_data?
+
+## Missing values
+
+Let's now examine the frequency of our wellbeing variables.
+
+We will temporarily convert the variables into factors using \`as_factor()\` and \`mutate()\` for a more meaningful output.
+
+Review the frequency tables, examining the missing values.
+
+```{r}
+#the code below displays the results in a nice table  
+merged_data %>%
+  select(HAPPYWB, ANXIOUS) %>% # Select variables
+  mutate(across(everything(), as.factor)) %>% # Convert all selected variables to factors
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% # Pivot data for easier counting
+  group_by(Variable, Category) %>%
+  summarise(Count = n(), .groups = 'drop') %>% # Summarise counts
+  pivot_wider(names_from = Variable, values_from = Count) %>% # Pivot data to have variables as columns
+  adorn_totals("row") %>% # Optionally, add totals row
+  kable() # Display as a nice table 
+```
+
+**Questions**
+
+5\.
+Why do you think there are so many system missing values (NA) for each of the well-being variables?
+
+Note, you can use the documentation to check if needed (see \[[FRS documentation](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=9073#!/documentation)\]).
+
+What does this mean when it comes to interpreting the percentages?
+
+**Note:** For ease of interpretation, we are converting the original numeric `FAMTYPBU` variable into labeled factors using `as_factor()`, so that they directly display the value labels.
+
+```{r}
+merged_data$FAMTYPBU <- as_factor(merged_data$FAMTYPBU)
+merged_data$IAGEGR4 <- as_factor(merged_data$IAGEGR4)
+
+#drop the "Any other category" level from the variable as it did not apply to anyone in the data
+merged_data$FAMTYPBU <- droplevels(merged_data$FAMTYPBU)
+
+```
+
+## Compare unweighted and weighted proportions
+
+Let's examine the unweighted responses first.
+
+The \`xtabs()\` function can be used for categorical variables and the \`summary()\` function for continuous ones.
+
+```{r}
+round(            ### Round the results to one decimal
+  100*            ### Convert proportions to %  
+    prop.table(   ### Compute proportions
+      xtabs(~FAMTYPBU,merged_data) ### Compute frequencies
+    ),
+  1)
+
+round(            ### Round the results to one decimal
+  100*            ### Convert proportions to %  
+    prop.table(   ### Compute proportions
+      xtabs(~IAGEGR4,merged_data) ### Compute frequencies
+    ),
+  1)
+#unweigthed summary results
+summary(merged_data$HAPPYWB)
+summary(merged_data$ANXIOUS)
+```
+
+What is the (unweighted) percentage of individuals living in an couple without children?
+Would this be representative of the population?
+
+Let's compare with the weighted frequencies.
+We will use the `wtd.table()` from the `Hmisc` package.
+The weights are specified after the variable for which we request the frequencies in the command below.
+
+```{r}
+# Raw output
+wtd.table(merged_data$FAMTYPBU,weights=merged_data$GROSS4)
+
+# Converted into proportions            
+round(
+  100*
+    prop.table(
+      wtd.table(merged_data$FAMTYPBU,weights=merged_data$GROSS4)$sum.of.weights),
+  1)
+```
+
+Now what is the representative proportion of couples without children?
+26.9, is this higher or lower than the unweighted proportion?
+
+Let's look at the relation between family type and happiness and compare the unweighted and weighted results?
+
+```{r}
+#unweighted
+merged_data %>% 
+  group_by(FAMTYPBU) %>% 
+  summarise (happiness = round(mean(HAPPYWB, na.rm=TRUE),2))
+
+#weighted
+merged_data %>% 
+  group_by(FAMTYPBU) %>% 
+  summarise (happiness = round(weighted.mean(HAPPYWB,GROSS4, na.rm=TRUE),2))
+```
+
+Is there a difference between the results?
+Why do you thin there might or not be a difference?
+
+```{r}
+#unweighted
+merged_data %>% 
+  group_by(IAGEGR4) %>% 
+  summarise (happiness = round(mean(HAPPYWB, na.rm=TRUE),2))
+
+#weighted
+merged_data %>% 
+  group_by(IAGEGR4) %>% 
+  summarise (happiness = round(weighted.mean(HAPPYWB,GROSS4, na.rm=TRUE),2))
+```
+
+## **Confidence intervals**
+
+So far, we have just computed point estimates without worrying about their precision.
+We can compute confidence intervals to indicate the precision (uncertainty) of our estimates.
+
+**Confidence intervals for numerical variables:** Numerous R packages provide functionalities for calculating confidence intervals and standard errors for means.
+However, here we emphasise manual computation to gain a deeper understanding of the underlying processes.
+
+Under the assumption of simple random sampling, a 95% confidence interval for the mean is calculated as the mean plus or minus 1.96 times the standard error of the mean.
+The standard error of the mean itself is the standard error of the mean (that is, the square root of its variance) divided by the square of the sample size.
+Since we have functions for computing weighted means and variance in R, we can compute:
+
+```{r}
+m.p.happy<-wtd.mean(merged_data$HAPPYWB,weights=merged_data$GROSS4)
+se.p.happy<-sqrt(wtd.var(merged_data$HAPPYWB,weights=merged_data$GROSS4))
+n.happy<-sum(merged_data$GROSS4[!is.na(merged_data$HAPPYWB)])
+
+ci.happy<-c(m.p.happy,m.p.happy-1.96*(se.p.happy/sqrt(n.happy)),
+            m.p.happy+1.96*(se.p.happy/sqrt(n.happy)))
+ci.happy
+
+m.p.anxious<-wtd.mean(merged_data$ANXIOUS,weights=merged_data$GROSS4)
+se.p.anxious<-sqrt(wtd.var(merged_data$ANXIOUS,weights=merged_data$GROSS4))
+n.anxious<-sum(merged_data$GROSS4[!is.na(merged_data$ANXIOUS)])
+
+ci.anxious<-c(m.p.anxious,m.p.anxious-1.96*(se.p.anxious/sqrt(n.anxious)),
+              m.p.anxious+1.96*(se.p.anxious/sqrt(n.anxious)))
+ci.anxious
+```
+
+**Questions**
+
+6.  How happy are people overall on a scale of 0 to 10?
+
+**Confidence intervals for categorical variables:** The `DescTools` package provides `MultinomCI()` a handy function to compute confidence intervals for multinomial proportions.
+
+We need to provide `MultinomCI()` with two parameters: the frequencies for which we would like a confidence interval, and the confidence interval we want.
+
+```{r}
+# Calculate the frequency table of the variable
+category_freq <- table(merged_data$FAMTYPBU)
+
+# Calculate the multinomial confidence intervals
+ci_results <-round(((MultinomCI(category_freq, conf.level = 0.95))*100),1)
+
+# View results
+ci_results
+```
+
+## Answers
+
+1\.
+There are `r nrow(frs_adult2122_short)` cases in the adult dataset and `r nrow(frs_benunit2122_short)` in the benunit dataset.
+
+2\.
+The total number of variables is `r ncol(frs_adult2122_short)` in the adult dataset and `r ncol(frs_benunit2122_short)` in the benunit dataset..
+
+3\.
+For example, `HAPPYWB` records responses to the questions of "How happy did you feel yesterday?" on a scale of 'Not at all happy' to 'Completely happy'.
+The `FAMTYPBU` from the benunit dataset provides the family type.
+
+4\.
+There are a total of `r ncol(merged_data)` variables in the new merged data.
+
+5\.
+The wellbeing variables cannot be answered by proxy, so if the person is not present to answer then no answer is recorded.
+
+6.  People are relatively happy, with an average of 7.4 out of 10.
