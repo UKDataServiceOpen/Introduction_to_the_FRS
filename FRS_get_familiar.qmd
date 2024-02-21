@@ -1,4 +1,5 @@
 ---
+project:
 title: "Getting familiar with the Family Resources Survey using R"
 author: "UK Data Service"
 date: last-modified
@@ -20,7 +21,7 @@ editor:
     wrap: sentence
 ---
 
-This exercise is part of the 'Getting started with <!-- add module name -->' online module.
+This exercise is part of the 'Getting started with ADD MODULE NAME' online module.
 
 In the exercise, we examine data from the Family Resources Survey 2021/2022 financial year and explore:
 
@@ -353,20 +354,9 @@ ci_results
 
 ## Answers
 
-1\.
-There are `r nrow(frs_adult2122_short)` cases in the adult dataset and `r nrow(frs_benunit2122_short)` in the benunit dataset.
-
-2\.
-The total number of variables is `r ncol(frs_adult2122_short)` in the adult dataset and `r ncol(frs_benunit2122_short)` in the benunit dataset..
-
-3\.
-For example, `HAPPYWB` records responses to the questions of "How happy did you feel yesterday?" on a scale of 'Not at all happy' to 'Completely happy'.
-The `FAMTYPBU` from the benunit dataset provides the family type.
-
-4\.
-There are a total of `r ncol(merged_data)` variables in the new merged data.
-
-5\.
-The wellbeing variables cannot be answered by proxy, so if the person is not present to answer then no answer is recorded.
-
+1.  There are `r nrow(frs_adult2122_short)` cases in the adult dataset and `r nrow(frs_benunit2122_short)` in the benunit dataset.
+2.  The total number of variables is `r ncol(frs_adult2122_short)` in the adult dataset and `r ncol(frs_benunit2122_short)` in the benunit dataset.
+3.  For example, `HAPPYWB` records responses to the questions of "How happy did you feel yesterday?" on a scale of 'Not at all happy' to 'Completely happy'. The `FAMTYPBU` from the benunit dataset provides the family type.
+4.  There are a total of `r ncol(merged_data)` variables in the new merged data.
+5.  The wellbeing variables cannot be answered by proxy, so if the person is not present to answer then no answer is recorded.
 6.  People are relatively happy, with an average of 7.4 out of 10.
