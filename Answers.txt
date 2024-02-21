@@ -1,0 +1,19 @@
+## Answers
+
+1\.
+There are `r nrow(frs_adult2122_short)` - 27508 cases in the adult dataset and `r nrow(frs_benunit2122_short)` 18541 in the benunit dataset.
+
+2\.
+The total number of variables is `r ncol(frs_adult2122_short)` 8 in the adult dataset and `r ncol(frs_benunit2122_short)`3 in the benunit dataset..
+
+3\.
+For example, `HAPPYWB` records responses to the questions of "How happy did you feel yesterday?" on a scale of 'Not at all happy' to 'Completely happy'.
+The `FAMTYPBU` from the benunit dataset provides the family type.
+
+4\.
+There are a total of `r ncol(merged_data)`9 variables in the new merged data.
+
+5\.
+The wellbeing variables cannot be answered by proxy, so if the person is not present to answer then no answer is recorded.
+
+6.  People are relatively happy, with an average of 7.4 out of 10.
