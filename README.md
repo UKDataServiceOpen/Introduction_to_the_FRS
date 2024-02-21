@@ -7,4 +7,3 @@ This repository contains the Quarto source files of the practical exercises for 
 
 Direct links to the exercises on GitHub Pages:
 
-- R version: <a href="https://github.com/UKDataServiceOpen/Introduction_to_the_FRS/blob/main/FRS_get_familiar.html" target="_blank" rel="noopener noreferrer" >Getting familiar with the FRS data using R </a>
